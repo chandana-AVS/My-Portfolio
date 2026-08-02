@@ -12,6 +12,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" defer></script>
 </head>
 <body>
+  <canvas id="particle-canvas"></canvas>
 
   <!-- Loading Screen -->
   <div id="loader">
@@ -463,5 +464,95 @@
   </button>
 
   <script src="script.js"></script>
+<!-- Interactive Constellation & Particle Background Effect -->
+<script>const canvas = document.getElementById('particle-canvas');
+const ctx = canvas.getContext('2d');
+
+let particlesArray = [];
+const numberOfParticles = 70; // Adjust for density
+
+// Resize canvas to match window dimensions
+function setCanvasSize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+setCanvasSize();
+
+window.addEventListener('resize', () => {
+  setCanvasSize();
+  initParticles();
+});
+
+// Particle Class
+class Particle {
+  constructor() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
+    this.size = Math.random() * 2 + 1; // Particle radius
+    this.speedX = (Math.random() - 0.5) * 0.6; // Horizontal drift speed
+    this.speedY = (Math.random() - 0.5) * 0.6; // Vertical drift speed
+  }
+
+  update() {
+    this.x += this.speedX;
+    this.y += this.speedY;
+
+    // Wrap around screen edges
+    if (this.x > canvas.width) this.x = 0;
+    if (this.x < 0) this.x = canvas.width;
+    if (this.y > canvas.height) this.y = 0;
+    if (this.y < 0) this.y = canvas.height;
+  }
+
+  draw() {
+    ctx.fillStyle = 'rgba(20, 184, 166, 0.7)'; // Glow color (matches teal accent)
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function initParticles() {
+  particlesArray = [];
+  for (let i = 0; i < numberOfParticles; i++) {
+    particlesArray.push(new Particle());
+  }
+}
+
+// Connect nearby particles with faint constellation lines
+function connectParticles() {
+  const maxDistance = 130;
+  for (let a = 0; a < particlesArray.length; a++) {
+    for (let b = a; b < particlesArray.length; b++) {
+      let dx = particlesArray[a].x - particlesArray[b].x;
+      let dy = particlesArray[a].y - particlesArray[b].y;
+      let distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < maxDistance) {
+        let opacity = 1 - (distance / maxDistance);
+        ctx.strokeStyle = `rgba(20, 184, 166, ${opacity * 0.25})`; // Faint line opacity
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+        ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+// Animation Loop
+function animateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let i = 0; i < particlesArray.length; i++) {
+    particlesArray[i].update();
+    particlesArray[i].draw();
+  }
+  connectParticles();
+  requestAnimationFrame(animateParticles);
+}
+
+initParticles();
+animateParticles();</script>
 </body>
 </html>
